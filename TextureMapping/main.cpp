@@ -5,6 +5,12 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#ifndef F_PI
+#define F_PI ((float)(M_PI))
+#define F_2_PI ((float)(2.f * F_PI))
+#define F_PI_2 ((float)(F_PI / 2.f))
+#endif
+
 #ifdef WIN32
 #include <windows.h>
 #pragma warning(disable:4996)
@@ -21,12 +27,10 @@ float Time;
 unsigned char * Texture;	// the texels
 unsigned int    textureImg;	// the texture object
 
-bool DistortionOn;
 bool TextureOn;
 void DoTextureMenu( int );
-void DoDistortionMenu( int );
 
-void MyObject( float, int, int);
+void OsuSphere( float, int, int);
 
 
 //	This is a sample OpenGL / GLUT program
@@ -45,11 +49,12 @@ void MyObject( float, int, int);
 //		6. The transformations to be reset
 //		7. The program to quit
 //
-//	Author:			Joe Graphics
+//	Setup Author:			Joe Graphics
+//  Working Author: 		Nirmit Patel
 
 // title of these windows:
 
-const char *WINDOWTITLE = "Project #3 Distortion -- Nirmit Patel";
+const char *WINDOWTITLE = "OpenGL/ GLUT World Texture Mapping";
 const char *GLUITITLE   = "User Interface Window";
 
 // what the glui package defines as true and false:
@@ -415,7 +420,7 @@ Display( )
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 	glColor3f(.2,.4,.7);
-	MyObject(1., 50, 50);
+	OsuSphere(1., 50, 50);
 
 	glDisable( GL_TEXTURE_2D );
 	glPopMatrix();
@@ -490,16 +495,6 @@ DoTextureMenu( int id )
 }
 
 void
-DoDistortionMenu( int id )
-{
-	DistortionOn = id;
-
-	glutSetWindow( MainWindow );
-	glutPostRedisplay( );
-}
-
-
-void
 DoColorMenu( int id )
 {
 	WhichColor = id - RED;
@@ -507,7 +502,6 @@ DoColorMenu( int id )
 	glutSetWindow( MainWindow );
 	glutPostRedisplay( );
 }
-
 
 void
 DoDebugMenu( int id )
@@ -659,10 +653,6 @@ InitMenus( )
 	glutAddMenuEntry( "Off",  0 );
 	glutAddMenuEntry( "On",   1 );
 
-	int distortionmenu = glutCreateMenu( DoDistortionMenu );
-	glutAddMenuEntry( "Off",  0 );
-	glutAddMenuEntry( "On",   1 );
-
 	int depthcuemenu = glutCreateMenu( DoDepthMenu );
 	glutAddMenuEntry( "Off",  0 );
 	glutAddMenuEntry( "On",   1 );
@@ -697,7 +687,6 @@ InitMenus( )
 
 	glutAddSubMenu(   "Depth Cue",     depthcuemenu);
 	glutAddSubMenu(   "Texture",       texturemenu);
-	glutAddSubMenu(   "Distortion",    distortionmenu);
 	glutAddSubMenu(   "Projection",    projmenu );
 	glutAddMenuEntry( "Reset",         RESET );
 	glutAddSubMenu(   "Debug",         debugmenu);
@@ -779,10 +768,10 @@ InitGraphics( )
 
 	//Texture importing
 
-	Texture = BmpToTexture( (char *)"monkeyface.bmp", &width, &height );
+	Texture = BmpToTexture( (char *)"worldtex.bmp", &width, &height );
 	
 	if( Texture == NULL )
-			fprintf( stderr, "Cannot open texture '%s'\n", "monkeyface.bmp" );
+			fprintf( stderr, "Cannot open texture '%s'\n", "worldtex.bmp" );
 	else
 			fprintf( stderr, "Width = %d ; Height = %d\n", width, height );
 
@@ -989,7 +978,6 @@ Reset( )
 	WhichProjection = PERSP;
 	Xrot = Yrot = 0.;
 	TextureOn = true;
-	DistortionOn = false;
 }
 
 
@@ -1477,141 +1465,89 @@ Unit(float vin[3], float vout[3])
 	return dist;
 }
 
-#ifndef POINT_H
-#define POINT_H
-struct point
-{
-	float x, y, z;		// coordinates
-	float nx, ny, nz;	// surface normal
-	float s, t;		// texture coords
-};
-
 inline
 void
-DrawPoint( struct point *p )
+_DrawSphLatLng( float radius, float lat, float lng )
 {
-	glNormal3fv( &p->nx );
-	glTexCoord2fv( &p->s );
-	glVertex3fv( &p->x );
+	// lat is in radians between -F_PI_2 and +F_PI_2
+	// lng is in radians between -F_PI and +F_PI
+	float xz =  cosf(lat);
+	float x = xz * sinf(lng);
+	float y = sinf(lat);
+	float z = xz * cosf(lng);
+	float nx = x;		// for a *sphere only*, the normal is the unitized position
+	float ny = y;		// for a *sphere only*, the normal is the unitized position
+	float nz = z;		// for a *sphere only*, the normal is the unitized position
+	float s = ( lng + F_PI )   / F_2_PI;
+	float t = ( lat + F_PI_2 ) / F_PI;
+	glTexCoord2f( s, t );
+	glNormal3f( nx, ny, nz );
+	glVertex3f( x*radius, y*radius, z*radius );
 }
-#endif
 
-int		MyNumLngs, MyNumLats;
-struct point *	MyPts;
-
-inline
-struct point *
-MyPtsPointer( int lat, int lng )
-{
-	if( lat < 0 )			lat += (MyNumLats-1);
-	if( lng < 0 )			lng += (MyNumLngs-0);
-	if( lat > MyNumLats-1 )	lat -= (MyNumLats-1);
-	if( lng > MyNumLngs-1 )	lng -= (MyNumLngs-0);
-	return &MyPts[ MyNumLngs*lat + lng ];
-}
 
 void
-MyObject( float radius, int slices, int stacks )
+OsuSphere( float radius, int slices, int stacks )
 {
-	// set the globals:
+	// sanity check:
+	radius = (float)fabs(radius);
+	if( slices < 4 )		slices = 4;
+	if( stacks < 4 )		stacks = 4;
 
-	MyNumLngs = slices;
-	MyNumLats = stacks;
-	if( MyNumLngs < 3 )
-		MyNumLngs = 3;
-	if( MyNumLats < 3 )
-		MyNumLats = 3;
 
-	// allocate the point data structure:
+	glBegin( GL_TRIANGLES );
 
-	MyPts = new struct point[ MyNumLngs * MyNumLats ];
-
-	// fill the MyPts structure:
-
-	for( int ilat = 0; ilat < MyNumLats; ilat++ )
+	// south pole:
 	{
-		float lat = -M_PI_2/2.  +  M_PI_2 * (float)ilat / (float)(MyNumLats-1);	// ilat=0/lat=0. is the south pole
-											// ilat=MyNumLats-1, lat=+M_PI/2. is the north pole
-		float xz = cosf( lat );
-		float  y = sinf( lat );
-		for( int ilng = 0; ilng < MyNumLngs; ilng++ )				// ilng=0, lng=-M_PI and
-											// ilng=MyNumLngs-1, lng=+M_PI are the same meridian
+		int istack = 0;
+		float north = -F_PI_2 + F_PI * (float)(istack + 1) / (float)stacks;
+		float south = -F_PI_2 + F_PI * (float)(istack + 0) / (float)stacks;
+		for (int islice = 0; islice < slices; islice++)
 		{
-			float lng = -M_PI  +  2. * M_PI * (float)ilng / (float)(MyNumLngs-1);
-			float x =  xz * cosf( lng );
-			float z = -xz * sinf( lng );
-			struct point* p = MyPtsPointer( ilat, ilng );
-			p->x  = radius * x;
-			p->y  = radius * y;
-			p->z  = radius * z;
-			p->nx = x;
-			p->ny = y;
-			p->nz = z;
-			if(! DistortionOn){
-				p->s = ( lng + M_PI    ) / ( 2.*M_PI );
-				p->t = ( lat + M_PI/2. ) / M_PI;
-			}
-			else{
-				p->s = ( lng + M_PI + sinf(2 * M_PI * (Time + (float)ilat/MyNumLngs)) ) / ( 2.*M_PI );
-				p->t = ( lat + M_PI/2. ) / M_PI;
-			}
+			float west = -F_PI + F_2_PI * (float)(islice + 0) / (float)slices;
+			float east = -F_PI + F_2_PI * (float)(islice + 1) / (float)slices;
+
+			_DrawSphLatLng( radius, south, .5f * (east + west));
+			_DrawSphLatLng( radius, north, east);
+			_DrawSphLatLng( radius, north, west);
 		}
 	}
 
-	struct point top, bot;		// top, bottom points
-
-	top.x =  0.;		top.y  = radius;	top.z = 0.;
-	top.nx = 0.;		top.ny = 1.;		top.nz = 0.;
-	top.s  = 0.;		top.t  = 1.;
-
-	bot.x =  0.;		bot.y  = -radius;	bot.z = 0.;
-	bot.nx = 0.;		bot.ny = -1.;		bot.nz = 0.;
-	bot.s  = 0.;		bot.t  =  0.;
-
-	// connect the north pole to the latitude MyNumLats-2:
-
-	glBegin(GL_TRIANGLE_STRIP);
-	for (int ilng = 0; ilng < MyNumLngs; ilng++)
+	// north pole:
 	{
-		float lng = -M_PI + 2. * M_PI * (float)ilng / (float)(MyNumLngs - 1);
-		top.s = (lng + M_PI) / (2. * M_PI);
-		DrawPoint(&top);
-		struct point* p = MyPtsPointer(MyNumLats - 2, ilng);	// ilat=MyNumLats-1 is the north pole
-		DrawPoint(p);
-	}
-	glEnd();
-
-	// connect the south pole to the latitude 1:
-
-	glBegin( GL_TRIANGLE_STRIP );
-	for (int ilng = MyNumLngs - 1; ilng >= 0; ilng--)
-	{
-		float lng = -M_PI + 2. * M_PI * (float)ilng / (float)(MyNumLngs - 1);
-		bot.s = (lng + M_PI) / (2. * M_PI);
-		DrawPoint(&bot);
-		struct point* p = MyPtsPointer(1, ilng);					// ilat=0 is the south pole
-		DrawPoint(p);
-	}
-	glEnd();
-
-	// connect the horizontal strips:
-
-	for( int ilat = 2; ilat < MyNumLats-1; ilat++ )
-	{
-		struct point* p;
-		glBegin(GL_TRIANGLE_STRIP);
-		for( int ilng = 0; ilng < MyNumLngs; ilng++ )
+		int istack = stacks - 1;
+		float north = -F_PI_2 + F_PI * (float)(istack + 1) / (float)stacks;
+		float south = -F_PI_2 + F_PI * (float)(istack + 0) / (float)stacks;
+		for (int islice = 0; islice < slices; islice++)
 		{
-			p = MyPtsPointer( ilat, ilng );
-			DrawPoint( p );
-			p = MyPtsPointer( ilat-1, ilng );
-			DrawPoint( p );
+			float west = -F_PI + F_2_PI * (float)(islice + 0) / (float)slices;
+			float east = -F_PI + F_2_PI * (float)(islice + 1) / (float)slices;
+
+			_DrawSphLatLng( radius, north, .5f*(east + west) );
+			_DrawSphLatLng( radius, south, west );
+			_DrawSphLatLng( radius, south, east );
 		}
-		glEnd();
 	}
 
-	// clean-up:
+	// all the bands in between:
+	for (int istack = 1; istack < stacks-1; istack++)
+	{
+		float north = -F_PI_2 + F_PI * (float)(istack + 1) / (float)stacks;
+		float south = -F_PI_2 + F_PI * (float)(istack + 0) / (float)stacks;
+		for (int islice = 0; islice < slices; islice++)
+		{
+			float west = -F_PI + F_2_PI * (float)(islice + 0) / (float)slices;
+			float east = -F_PI + F_2_PI * (float)(islice + 1) / (float)slices;
 
-	delete [ ] MyPts;
-	MyPts = NULL;
+			_DrawSphLatLng( radius, north, west );
+			_DrawSphLatLng( radius, south, west );
+			_DrawSphLatLng( radius, north, east );
+
+			_DrawSphLatLng( radius, north, east );
+			_DrawSphLatLng( radius, south, west );
+			_DrawSphLatLng( radius, south, east );
+		}
+	}
+
+	glEnd( );
 }
