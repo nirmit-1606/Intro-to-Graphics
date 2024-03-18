@@ -45,11 +45,12 @@
 //		6. The transformations to be reset
 //		7. The program to quit
 //
-//	Author:			Joe Graphics
+//	Setup Author:			Joe Graphics
+//  Working Author: 		Nirmit Patel
 
 // title of these windows:
 
-const char *WINDOWTITLE = "Project#2 Cessna";
+const char *WINDOWTITLE = "OpenGL / GLUT Cessna";
 const char *GLUITITLE   = "User Interface Window";
 
 // what the glui package defines as true and false:
@@ -187,7 +188,6 @@ int		DebugOn;				// != 0 means to print debugging info
 int		DepthCueOn;				// != 0 means to use intensity depth cueing
 int		DepthBufferOn;			// != 0 means to use the z-buffer
 int		DepthFightingOn;		// != 0 means to force the creation of z-fighting
-GLuint	BoxList;				// object display list
 GLuint	CessnaList;				// James Bond Cessna
 int		MainWindow;				// window id for main graphics window
 float	Scale;					// scaling factor

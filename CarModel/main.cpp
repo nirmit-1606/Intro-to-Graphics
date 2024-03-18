@@ -33,8 +33,8 @@
 //		6. The transformations to be reset
 //		7. The program to quit
 //
-//	Author:			Joe Graphics
-//  Modifier: 		Nirmit Patel
+//	Setup Author:			Joe Graphics
+//  Working Author: 		Nirmit Patel
 
 // title of these windows:
 
