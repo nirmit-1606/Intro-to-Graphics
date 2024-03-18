@@ -173,7 +173,7 @@ int DebugOn;		 // != 0 means to print debugging info
 int DepthCueOn;		 // != 0 means to use intensity depth cueing
 int DepthBufferOn;	 // != 0 means to use the z-buffer
 int DepthFightingOn; // != 0 means to force the creation of z-fighting
-GLuint BoxList;		 // object display list
+GLuint CarList;		 // object display list
 int MainWindow;		 // window id for main graphics window
 float Scale;		 // scaling factor
 int ShadowsOn;		 // != 0 means to turn shadows on
@@ -373,14 +373,14 @@ void Display()
 
 	// draw the box object by calling up its display list:
 
-	glCallList(BoxList);
+	glCallList(CarList);
 
 #ifdef DEMO_Z_FIGHTING
 	if (DepthFightingOn != 0)
 	{
 		glPushMatrix();
 		glRotatef(90.f, 0.f, 1.f, 0.f);
-		glCallList(BoxList);
+		glCallList(CarList);
 		glPopMatrix();
 	}
 #endif
@@ -711,8 +711,8 @@ void InitLists()
 
 	// create the object:
 
-	BoxList = glGenLists(1);
-	glNewList(BoxList, GL_COMPILE);
+	CarList = glGenLists(1);
+	glNewList(CarList, GL_COMPILE);
 
 	glBegin(GL_QUADS);
 
