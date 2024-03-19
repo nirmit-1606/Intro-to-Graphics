@@ -479,8 +479,6 @@ Display( )
 
 	glEnable( GL_TEXTURE_2D );
 
-
-	// draw the current object:
 	float timestand;
 
 	if(Time < .5)
@@ -489,7 +487,7 @@ Display( )
 		timestand = .5 - (Time - .5);
 	}
 
-	//glTranslatef(0., -1., 0.);
+	// draw the current object:
 	glRotatef(-45., 0., 1., 0.);
 	glRotatef(45, 1., 0., 0.);
 	DrawButterfly();
