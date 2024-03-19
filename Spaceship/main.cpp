@@ -313,6 +313,35 @@ struct point * PtsPointer( int, int );
 void DrawPoint( struct point *);
 void MjbSphere( float , int , int );
 
+// --------------------------------------------------------------------
+// Between [0,1]
+float rand01()
+{
+	return (float)rand() * (1.f / RAND_MAX);
+}
+
+// --------------------------------------------------------------------
+// Between [a,b]
+float randab(float a, float b)
+{
+	return a + (b - a) * rand01();
+}
+
+const int numTrees = 30;
+
+float globalX[numTrees];
+float globalZ[numTrees];
+
+void generateRandomCoordinates() {
+    // Seed the random number generator
+    srand(time(NULL));
+    
+    for (int i = 0; i < numTrees; ++i) {
+        globalX[i] = randab(-3, 3);
+        globalZ[i] = randab(-3, 3);
+    }
+}
+
 // main program:
 
 int
@@ -333,6 +362,7 @@ main( int argc, char *argv[ ] )
 	// create the display structures that will not change:
 
 	InitLists( );
+	generateRandomCoordinates();
 
 
 	// init all the global variables used by Display( ):
@@ -766,133 +796,24 @@ Display( )
 
 		// long forest list
 
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(0., 0., 0.);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
+		glShadeModel(GL_SMOOTH);
 
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(1.5, 0., 0.);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
+		SetMaterial(0.2f, 0.8f, 0.f, 2.f);
+		for (int i = 0; i < numTrees; ++i) {
+			glPushMatrix();
 
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(3., 0., -2.);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(3.5, 0., -1.);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(1., 0., -2.5);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(1.5, 0., 2.);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(2., 0., 1.);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(3.5, 0., 1.);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(1., 0., 3.);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(2., 0., 2.5);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(1., 0., 4.);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(0., 0., 1.);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(-1., 0., 3.);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(-2.5, 0., 0.);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(-2., 0., 2.);
-			glScalef(.06,.06,.06);
-			glCallList( tree04 );
-		glPopMatrix();
-
-		glPushMatrix();
-			glShadeModel( GL_SMOOTH );
-			SetMaterial( 0.2f, 0.8f, 0.f,  2.f );
-			glTranslatef(-3., 0., 1.5);
-			glScalef(.03,.03,.03);	
-			glCallList( tree05 );
-		glPopMatrix();
+			glTranslatef(globalX[i], 0., globalZ[i]);
+			
+			if (i % 2 == 0) {
+				glScalef(.06, .06, .06);
+				glCallList(tree04);
+			} else {
+				glScalef(.03, .03, .03);
+				glCallList(tree05);
+			}
+			
+			glPopMatrix();
+		}
 
 		// buildings
 
