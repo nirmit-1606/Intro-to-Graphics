@@ -1,4 +1,4 @@
-#Spaceship Simulation and Day-Night Exploration
+## Spaceship Simulation and Day-Night Exploration
 
 In this simulation, I've imported various obj files to craft a dynamic experience.
 
